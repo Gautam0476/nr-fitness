@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: myy-app-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: DB_NAME
+        value: myy_app

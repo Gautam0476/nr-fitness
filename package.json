@@ -1,0 +1,18 @@
+{
+  "devDependencies": {
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwind": "^4.0.0",
+    "tailwindcss": "^4.2.1"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.5.0",
+    "axios": "^1.15.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "framer-motion": "^12.38.0",
+    "js": "^0.1.0",
+    "react-router-dom": "^7.13.1",
+    "three": "^0.183.2"
+  }
+}
