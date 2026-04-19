@@ -5,6 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
+let databaseReady = false;
 
 app.use(cors());
 app.use(express.json());
@@ -46,12 +47,27 @@ async function connectDatabase() {
     await mongoose.connect(buildMongoUri(), {
       serverSelectionTimeoutMS: 10000
     });
+    databaseReady = true;
     console.log('Database Connected Successfully!');
   } catch (err) {
+    databaseReady = false;
     console.error('DB Connection Error:', err.message);
-    process.exit(1);
   }
 }
+
+mongoose.connection.on('connected', () => {
+  databaseReady = true;
+});
+
+mongoose.connection.on('disconnected', () => {
+  databaseReady = false;
+  console.warn('Database disconnected.');
+});
+
+mongoose.connection.on('error', (error) => {
+  databaseReady = false;
+  console.error('Database connection error:', error.message);
+});
 
 function normalizeEmail(email = '') {
   return email.trim().toLowerCase();
@@ -76,6 +92,17 @@ function hashPassword(password) {
 
 function getMissingFields(payload, fields) {
   return fields.filter((field) => !String(payload[field] || '').trim());
+}
+
+function ensureDatabaseAvailable(res) {
+  if (databaseReady) {
+    return true;
+  }
+
+  res.status(503).json({
+    error: 'Database is not connected right now. Please try again in a moment.'
+  });
+  return false;
 }
 
 const inquirySchema = new mongoose.Schema(
@@ -124,21 +151,51 @@ const Inquiry = mongoose.model('Inquiry', inquirySchema);
 const MembershipRegistration = mongoose.model('MembershipRegistration', membershipSchema);
 const User = mongoose.model('User', userSchema);
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: 'nr-fitness-backend',
+    message: 'Backend is running. Use /api/health to check API status.',
+    databaseReady
+  });
+});
+
 app.get('/api/health', async (req, res) => {
   try {
+    if (!databaseReady || mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        ok: false,
+        service: 'nr-fitness-backend',
+        database: mongoose.connection.name || null,
+        state: mongoose.connection.readyState,
+        error: 'Database is not connected.'
+      });
+    }
+
     await mongoose.connection.db.admin().ping();
     res.status(200).json({
       ok: true,
+      service: 'nr-fitness-backend',
       database: mongoose.connection.name,
       state: mongoose.connection.readyState
     });
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(503).json({
+      ok: false,
+      service: 'nr-fitness-backend',
+      database: mongoose.connection.name || null,
+      state: mongoose.connection.readyState,
+      error: error.message
+    });
   }
 });
 
 app.post('/api/submit-form', async (req, res) => {
   try {
+    if (!ensureDatabaseAvailable(res)) {
+      return;
+    }
+
     const payload = {
       name: String(req.body.name || '').trim(),
       email: normalizeEmail(req.body.email),
@@ -177,6 +234,10 @@ app.post('/api/submit-form', async (req, res) => {
 
 app.post('/api/register-membership', async (req, res) => {
   try {
+    if (!ensureDatabaseAvailable(res)) {
+      return;
+    }
+
     const payload = {
       name: String(req.body.name || '').trim(),
       email: normalizeEmail(req.body.email),
@@ -215,6 +276,10 @@ app.post('/api/register-membership', async (req, res) => {
 
 app.post('/api/auth/signup', async (req, res) => {
   try {
+    if (!ensureDatabaseAvailable(res)) {
+      return;
+    }
+
     const fullName = String(req.body.fullName || '').trim();
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || '');
@@ -265,6 +330,10 @@ app.post('/api/auth/signup', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
+    if (!ensureDatabaseAvailable(res)) {
+      return;
+    }
+
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || '');
 
@@ -298,6 +367,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-connectDatabase().then(() => {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  connectDatabase();
 });
