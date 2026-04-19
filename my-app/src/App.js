@@ -52,6 +52,16 @@ const Navbar = ({ onLogout, currentPage, setCurrentPage }) => {
             </button>
           </div>
         </div>
+
+        {menuOpen && (
+          <div className="md:hidden mt-3 rounded-2xl border border-zinc-800 bg-black/90 backdrop-blur-sm shadow-2xl overflow-hidden">
+            <button onClick={() => handleNav('home')} className={`block w-full px-4 py-3 text-left text-sm font-bold transition ${currentPage === 'home' ? 'text-orange-500 bg-zinc-900/80' : 'text-gray-100 hover:bg-zinc-900/80 hover:text-orange-500'}`}>Home</button>
+            <button onClick={() => handleNav('about')} className={`block w-full px-4 py-3 text-left text-sm font-bold transition ${currentPage === 'about' ? 'text-orange-500 bg-zinc-900/80' : 'text-gray-100 hover:bg-zinc-900/80 hover:text-orange-500'}`}>About Us</button>
+            <button onClick={() => handleNav('plans')} className={`block w-full px-4 py-3 text-left text-sm font-bold transition ${currentPage === 'plans' ? 'text-orange-500 bg-zinc-900/80' : 'text-gray-100 hover:bg-zinc-900/80 hover:text-orange-500'}`}>Plans</button>
+            <button onClick={() => handleNav('contact')} className={`block w-full px-4 py-3 text-left text-sm font-bold transition ${currentPage === 'contact' ? 'text-orange-500 bg-zinc-900/80' : 'text-gray-100 hover:bg-zinc-900/80 hover:text-orange-500'}`}>Contact Us</button>
+            <button onClick={onLogout} className="block w-full border-t border-zinc-800 px-4 py-3 text-left text-sm font-bold text-white transition hover:bg-red-600">Logout</button>
+          </div>
+        )}
       </div>
     </nav>
   );
