@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unknown-property */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 const AntigravityInner = ({
@@ -12,7 +12,6 @@ const AntigravityInner = ({
   const meshRef = useRef(null);
   const { viewport } = useThree();
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  const lastMousePos = useRef({ x: 0, y: 0 });
   const virtualMouse = useRef({ x: 0, y: 0 });
 
   const particles = useMemo(() => {
